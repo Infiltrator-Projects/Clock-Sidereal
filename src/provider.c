@@ -6,7 +6,7 @@
  * Common's legacy rendering implementation. Longitude is east-positive.
  */
 #include <infiltratr/temporal_clock_resource.h>
-#include "temporal_solar_compact.h"
+
 
 #include <math.h>
 #include <stdint.h>
@@ -45,7 +45,7 @@ static bool render(const InfiltratrTemporalClockProvider *provider,
     int written;
     (void)provider; (void)language; (void)offset; (void)latitude;
 
-    if (!temporal_solar_valid_longitude(longitude)) return false;
+    if (!isfinite(longitude) || longitude < -180.0 || longitude > 180.0) return false;
     whole = (int64_t)floorl(sidereal_seconds(instant, longitude));
     hour = (unsigned int)(whole / INT64_C(3600));
     minute = (unsigned int)((whole / INT64_C(60)) % INT64_C(60));
@@ -71,7 +71,8 @@ static bool next_tick(const InfiltratrTemporalClockProvider *provider,
     const long double unit = show_seconds ? 1.0L : 60.0L;
     long double phase, remaining, elapsed_ms;
     (void)provider; (void)offset; (void)latitude;
-    if (milliseconds == NULL || !temporal_solar_valid_longitude(longitude)) return false;
+    if (milliseconds == NULL || !isfinite(longitude) ||
+        longitude < -180.0 || longitude > 180.0) return false;
     phase = fmodl(sidereal_seconds(instant, longitude), unit);
     if (phase < 0.0L) phase += unit;
     remaining = unit - phase;
